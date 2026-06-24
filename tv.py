@@ -2,8 +2,16 @@ import os
 import requests
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 CHANNEL_ID = os.environ.get("CHANNEL_ID")  # e.g. @yourchannel or -100xxxxxxxxxx
@@ -29,7 +37,6 @@ async def send_file(file: UploadFile = File(...)):
     filename = file.filename
     content_type = file.content_type or ""
 
-    # Route to correct Telegram endpoint based on file type
     if content_type.startswith("image/"):
         endpoint = f"{TELEGRAM_API}/sendPhoto"
         files = {"photo": (filename, file_bytes, content_type)}
@@ -40,7 +47,6 @@ async def send_file(file: UploadFile = File(...)):
         endpoint = f"{TELEGRAM_API}/sendAudio"
         files = {"audio": (filename, file_bytes, content_type)}
     else:
-        # Everything else (PDFs, ZIPs, docs, etc.) goes as a document
         endpoint = f"{TELEGRAM_API}/sendDocument"
         files = {"document": (filename, file_bytes, content_type)}
 
